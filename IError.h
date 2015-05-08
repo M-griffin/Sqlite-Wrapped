@@ -1,7 +1,7 @@
 /*
- **	IError.h
+ **    IError.h
  **
- **	Published / author: 2004-06-11 / grymse@alhem.net
+ **    Published / author: 2004-06-11 / grymse@alhem.net
  **/
 
 /*
@@ -10,7 +10,7 @@ Copyright (C) 2004,2005,2006  Anders Hedstrom
 This program is made available under the terms of the GNU GPL.
 
 If you would like to use this program in a closed-source application,
-a separate license agreement is available. For information about 
+a separate license agreement is available. For information about
 the closed-source license agreement for this program, please
 visit http://www.alhem.net/sqlwrapped/license.html and/or
 email license@alhem.net.
@@ -49,8 +49,8 @@ class Query;
 class IError
 {
 public:
-	virtual void error(Database&,const std::string&) = 0;
-	virtual void error(Database&,Query&,const std::string&) = 0;
+    virtual void error(Database&,const std::string&) = 0;
+    virtual void error(Database&,Query&,const std::string&) = 0;
 };
 
 

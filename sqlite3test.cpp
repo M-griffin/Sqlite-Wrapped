@@ -1,7 +1,7 @@
 /*
- **	sqlite3test.cpp
+ **    sqlite3test.cpp
  **
- **	Published / author: 2006-03-23 / grymse@alhem.net
+ **    Published / author: 2006-03-23 / grymse@alhem.net
  **/
 
 /*
@@ -28,28 +28,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int main(int argc,char *argv[])
 {
-	Database::Mutex mutex; // not really necessary here at all
-	StderrLog log;
-	Database db(mutex, "test3.db", &log);
-	Query q(db);
+    Database::Mutex mutex; // not really necessary here at all
+    StderrLog log;
+    Database db(mutex, "test3.db", &log);
+    Query q(db);
 
-	// create a test3 table
-	q.execute("create table test3 ( num integer, name string )");
+    // create a test3 table
+    q.execute("create table test3 ( num integer, name string )");
 
-	// fill test3 with some data
-	q.execute("insert into test3 values(1, 'Anders')");
-	q.execute("insert into test3 values(2, 'Grymse')");
+    // fill test3 with some data
+    q.execute("insert into test3 values(1, 'Anders')");
+    q.execute("insert into test3 values(2, 'Grymse')");
 
-	// retrieve data
-	q.get_result("select * from test3");
-	while (q.fetch_row())
-	{
-		long num = q.getval();
-		std::string name = q.getstr();
-		printf("#%ld: %s\n", num, name.c_str());
-	}
-	q.free_result();
+    // retrieve data
+    q.get_result("select * from test3");
+    while (q.fetch_row())
+    {
+        long num = q.getval();
+        std::string name = q.getstr();
+        printf("#%ld: %s\n", num, name.c_str());
+    }
+    q.free_result();
 
-	//
-	return 0;
+    //
+    return 0;
 }

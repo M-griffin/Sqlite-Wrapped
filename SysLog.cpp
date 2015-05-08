@@ -1,7 +1,7 @@
 /*
- **	SysLog.cpp
+ **    SysLog.cpp
  **
- **	Published / author: 2004-08-18 / grymse@alhem.net
+ **    Published / author: 2004-08-18 / grymse@alhem.net
  **/
 
 /*
@@ -10,7 +10,7 @@ Copyright (C) 2004,2005,2006  Anders Hedstrom
 This program is made available under the terms of the GNU GPL.
 
 If you would like to use this program in a closed-source application,
-a separate license agreement is available. For information about 
+a separate license agreement is available. For information about
 the closed-source license agreement for this program, please
 visit http://www.alhem.net/sqlwrapped/license.html and/or
 email license@alhem.net.
@@ -47,28 +47,28 @@ namespace SQLITEW_NAMESPACE {
 
 SysLog::SysLog(const std::string& appname,int option,int facility)
 {
-static	char blah[100];
-	strcpy(blah, appname.c_str());
-	openlog(blah, option, facility);
+static    char blah[100];
+    strcpy(blah, appname.c_str());
+    openlog(blah, option, facility);
 }
 
 
 SysLog::~SysLog()
 {
-	closelog();
+    closelog();
 }
 
 
 void SysLog::error(Database& db,const std::string& str)
 {
-	syslog(LOG_ERR, "%s", str.c_str() );
+    syslog(LOG_ERR, "%s", str.c_str() );
 }
 
 
 void SysLog::error(Database& db,Query& q,const std::string& str)
 {
-	syslog(LOG_ERR, "%s: %s(%d)", str.c_str(),q.GetError().c_str(),q.GetErrno() );
-	syslog(LOG_ERR, "QUERY: \"%s\"", q.GetLastQuery().c_str());
+    syslog(LOG_ERR, "%s: %s(%d)", str.c_str(),q.GetError().c_str(),q.GetErrno() );
+    syslog(LOG_ERR, "QUERY: \"%s\"", q.GetLastQuery().c_str());
 }
 
 

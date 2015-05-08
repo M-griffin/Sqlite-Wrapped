@@ -1,7 +1,7 @@
 /*
- **	SysLog.h
+ **    SysLog.h
  **
- **	Published / author: 2004-08-18 / grymse@alhem.net
+ **    Published / author: 2004-08-18 / grymse@alhem.net
  **/
 
 /*
@@ -10,7 +10,7 @@ Copyright (C) 2004,2005,2006  Anders Hedstrom
 This program is made available under the terms of the GNU GPL.
 
 If you would like to use this program in a closed-source application,
-a separate license agreement is available. For information about 
+a separate license agreement is available. For information about
 the closed-source license agreement for this program, please
 visit http://www.alhem.net/sqlwrapped/license.html and/or
 email license@alhem.net.
@@ -45,11 +45,11 @@ namespace SQLITEW_NAMESPACE {
 class SysLog : public IError
 {
 public:
-	SysLog(const std::string& = "database", int = LOG_PID, int = LOG_USER);
-	virtual ~SysLog();
+    SysLog(const std::string& = "database", int = LOG_PID, int = LOG_USER);
+    virtual ~SysLog();
 
-	void error(Database&,const std::string&);
-	void error(Database&,Query&,const std::string&);
+    void error(Database&,const std::string&);
+    void error(Database&,Query&,const std::string&);
 
 };
 
