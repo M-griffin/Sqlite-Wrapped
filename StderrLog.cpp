@@ -46,29 +46,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
 void StderrLog::error(Database& db,const std::string& str)
 {
-    time_t t = time(NULL);
+    time_t t = time(nullptr);
     struct tm *tp = localtime(&t);
     fprintf(stderr,"%d-%02d-%02d %02d:%02d:%02d :: Database: %s\n",
-        tp -> tm_year + 1900,tp -> tm_mon + 1,tp -> tm_mday,
-        tp -> tm_hour,tp -> tm_min, tp -> tm_sec,
-        str.c_str());
+            tp -> tm_year + 1900,tp -> tm_mon + 1,tp -> tm_mday,
+            tp -> tm_hour,tp -> tm_min, tp -> tm_sec,
+            str.c_str());
 }
 
 
 void StderrLog::error(Database& db,Query& q,const std::string& str)
 {
-    time_t t = time(NULL);
+    time_t t = time(nullptr);
     struct tm *tp = localtime(&t);
     fprintf(stderr,"%d-%02d-%02d %02d:%02d:%02d :: Query: %s: %s(%d)\n",
-        tp -> tm_year + 1900,tp -> tm_mon + 1,tp -> tm_mday,
-        tp -> tm_hour,tp -> tm_min, tp -> tm_sec,
-        str.c_str(),q.GetError().c_str(),q.GetErrno());
+            tp -> tm_year + 1900,tp -> tm_mon + 1,tp -> tm_mday,
+            tp -> tm_hour,tp -> tm_min, tp -> tm_sec,
+            str.c_str(),q.GetError().c_str(),q.GetErrno());
     fprintf(stderr," (QUERY: \"%s\")\n",q.GetLastQuery().c_str());
 }
 
@@ -76,4 +77,3 @@ void StderrLog::error(Database& db,Query& q,const std::string& str)
 #ifdef SQLITEW_NAMESPACE
 } // namespace SQLITEW_NAMESPACE {
 #endif
-

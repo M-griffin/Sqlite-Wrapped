@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _DATABASE_H_SQLITE
 #define _DATABASE_H_SQLITE
 
+#include <sqlite3.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -48,7 +50,8 @@ typedef __int64 int64_t;
 #endif
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
@@ -63,7 +66,8 @@ class Database
 public:
     /** Mutex container class, used by Lock.
         \ingroup threading */
-    class Mutex {
+    class Mutex
+    {
     public:
         Mutex();
         ~Mutex();
@@ -78,7 +82,8 @@ public:
     };
 private:
     /** Mutex helper class. */
-    class Lock {
+    class Lock
+    {
     public:
         Lock(Mutex& mutex,bool use);
         ~Lock();
@@ -88,21 +93,22 @@ private:
     };
 public:
     /** Connection pool struct. */
-    struct OPENDB {
+    struct OPENDB
+    {
         OPENDB() : busy(false) {}
         sqlite3 *db;
         bool busy;
     };
-    typedef std::list<OPENDB *> opendb_v;
+        typedef std::list<OPENDB *> opendb_v;
 
 public:
     /** Use file */
     Database(const std::string& database,
-        IError * = NULL);
+             IError * = nullptr);
 
     /** Use file + thread safe */
     Database(Mutex& ,const std::string& database,
-        IError * = NULL);
+             IError * = nullptr);
 
     virtual ~Database();
 
@@ -114,19 +120,19 @@ public:
     void error(Query&,const std::string& );
 
     /** Request a database connection.
-The "grabdb" method is used by the Query class, so that each object instance of Query gets a unique
-database connection. I will reimplement your connection check logic in the Query class, as that's where
-the database connection is really used.
-It should be used something like this.
-{
+    The "grabdb" method is used by the Query class, so that each object instance of Query gets a unique
+    database connection. I will reimplement your connection check logic in the Query class, as that's where
+    the database connection is really used.
+    It should be used something like this.
+    {
         Query q(db);
         if (!q.Connected())
              return false;
         q.execute("delete * from user"); // well maybe not
-}
+    }
 
-When the Query object is deleted, then "freedb" is called - the database connection stays open in the
-m_opendbs vector. New Query objects can then reuse old connections.
+    When the Query object is deleted, then "freedb" is called - the database connection stays open in the
+    m_opendbs vector. New Query objects can then reuse old connections.
     */
     OPENDB *grabdb();
     void freedb(OPENDB *odb);
@@ -143,7 +149,10 @@ m_opendbs vector. New Query objects can then reuse old connections.
 
 private:
     Database(const Database& ) : m_mutex(m_mutex) {}
-    Database& operator=(const Database& ) { return *this; }
+    Database& operator=(const Database& )
+    {
+        return *this;
+    }
     void error(const char *format, ...);
     //
     std::string database;

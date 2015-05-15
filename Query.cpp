@@ -29,48 +29,51 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #ifdef _WIN32
 #pragma warning(disable:4786)
 #endif
+
+#include <sqlite3.h>
 
 #include <string>
 #include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sqlite3.h>
 
 #include "Database.h"
 #include "Query.h"
 
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
 Query::Query(Database& dbin)
-: m_db(dbin)
-,odb(dbin.grabdb())
-,res(NULL)
-,row(false)
-,cache_rc(0)
-,cache_rc_valid(false)
-,m_row_count(0)
-,m_num_cols(0)
+    : m_db(dbin)
+    ,odb(dbin.grabdb())
+    ,res(nullptr)
+    ,row(false)
+    ,cache_rc(0)
+    ,cache_rc_valid(false)
+    ,m_row_count(0)
+    ,m_num_cols(0)
 {
 }
 
 
 Query::Query(Database& dbin,const std::string& sql)
-: m_db(dbin)
-,odb(dbin.grabdb())
-,res(NULL)
-,row(false)
-,cache_rc(0)
-,cache_rc_valid(false)
-,m_row_count(0)
-,m_num_cols(0)
+    : m_db(dbin)
+    ,odb(dbin.grabdb())
+    ,res(nullptr)
+    ,row(false)
+    ,cache_rc(0)
+    ,cache_rc_valid(false)
+    ,m_row_count(0)
+    ,m_num_cols(0)
 {
     execute(sql);
 }
@@ -110,8 +113,12 @@ bool Query::execute(const std::string& sql)
     }
     if (odb && !res)
     {
-        const char *s = NULL;
-        int rc = sqlite3_prepare(odb -> db, sql.c_str(), sql.size(), &res, &s);
+        const char *s = nullptr;
+
+        /*
+         * Setup for new Verson2 Sqlite3.
+         */
+        int rc = sqlite3_prepare_v2(odb -> db, sql.c_str(), sql.size(), &res, &s);
         if (rc != SQLITE_OK)
         {
             GetDatabase().error(*this, "execute: prepare query failed");
@@ -124,21 +131,21 @@ bool Query::execute(const std::string& sql)
         }
         rc = sqlite3_step(res); // execute
         sqlite3_finalize(res); // deallocate statement
-        res = NULL;
+        res = nullptr;
         switch (rc)
         {
-        case SQLITE_BUSY:
-            GetDatabase().error(*this, "execute: database busy");
-            return false;
-        case SQLITE_DONE:
-        case SQLITE_ROW:
-            return true;
-        case SQLITE_ERROR:
-            GetDatabase().error(*this, sqlite3_errmsg(odb -> db));
-            return false;
-        case SQLITE_MISUSE:
-            GetDatabase().error(*this, "execute: database misuse");
-            return false;
+            case SQLITE_BUSY:
+                GetDatabase().error(*this, "execute: database busy");
+                return false;
+            case SQLITE_DONE:
+            case SQLITE_ROW:
+                return true;
+            case SQLITE_ERROR:
+                GetDatabase().error(*this, sqlite3_errmsg(odb -> db));
+                return false;
+            case SQLITE_MISUSE:
+                GetDatabase().error(*this, "execute: database misuse");
+                return false;
         }
         GetDatabase().error(*this, "execute: unknown result code");
     }
@@ -159,17 +166,20 @@ sqlite3_stmt *Query::get_result(const std::string& sql)
     }
     if (odb && !res)
     {
-        const char *s = NULL;
-        int rc = sqlite3_prepare(odb -> db, sql.c_str(), sql.size(), &res, &s);
+        const char *s = nullptr;
+        /*
+         * Setup for new Verson2 Sqlite3.
+         */
+        int rc = sqlite3_prepare_v2(odb -> db, sql.c_str(), sql.size(), &res, &s);
         if (rc != SQLITE_OK)
         {
             GetDatabase().error(*this, "get_result: prepare query failed");
-            return NULL;
+            return nullptr;
         }
         if (!res)
         {
             GetDatabase().error(*this, "get_result: query failed");
-            return NULL;
+            return nullptr;
         }
         // get column names from result
         {
@@ -180,7 +190,8 @@ sqlite3_stmt *Query::get_result(const std::string& sql)
                 if (!p)
                     break;
                 m_nmap[p] = ++i;
-            } while (true);
+            }
+            while (true);
             m_num_cols = i;
         }
         cache_rc = sqlite3_step(res);
@@ -196,7 +207,7 @@ void Query::free_result()
     if (odb && res)
     {
         sqlite3_finalize(res);
-        res = NULL;
+        res = nullptr;
         row = false;
         cache_rc_valid = false;
     }
@@ -219,20 +230,20 @@ bool Query::fetch_row()
         cache_rc_valid = false;
         switch (rc)
         {
-        case SQLITE_BUSY:
-            GetDatabase().error(*this, "execute: database busy");
-            return false;
-        case SQLITE_DONE:
-            return false;
-        case SQLITE_ROW:
-            row = true;
-            return true;
-        case SQLITE_ERROR:
-            GetDatabase().error(*this, sqlite3_errmsg(odb -> db));
-            return false;
-        case SQLITE_MISUSE:
-            GetDatabase().error(*this, "execute: database misuse");
-            return false;
+            case SQLITE_BUSY:
+                GetDatabase().error(*this, "execute: database busy");
+                return false;
+            case SQLITE_DONE:
+                return false;
+            case SQLITE_ROW:
+                row = true;
+                return true;
+            case SQLITE_ERROR:
+                GetDatabase().error(*this, sqlite3_errmsg(odb -> db));
+                return false;
+            case SQLITE_MISUSE:
+                GetDatabase().error(*this, "execute: database misuse");
+                return false;
         }
         GetDatabase().error(*this, "execute: unknown result code");
     }
@@ -465,18 +476,16 @@ long Query::get_count(const std::string& sql)
 
 const char *Query::get_string(const std::string& sql)
 {
-    bool found = false;
     m_tmpstr = "";
     if (get_result(sql))
     {
         if (fetch_row())
         {
             m_tmpstr = getstr();
-            found = true;
         }
         free_result();
     }
-    return m_tmpstr.c_str(); // %! changed from 1.0 which didn't return NULL on failed query
+    return m_tmpstr.c_str(); // %! changed from 1.0 which didn't return nullptr on failed query
 }
 
 
@@ -508,8 +517,6 @@ bool Query::Connected()
 }
 
 
-
-
 void Query::ViewRes()
 {
     if (!res)
@@ -538,4 +545,3 @@ void Query::error(const std::string& msg)
 #ifdef SQLITEW_NAMESPACE
 } // namespace SQLITEW_NAMESPACE {
 #endif
-

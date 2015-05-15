@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _QUERY_H_SQLITE
 #define _QUERY_H_SQLITE
 
+#include <sqlite3.h>
+
 #include <string>
 #include <map>
 #ifdef WIN32
@@ -47,7 +49,8 @@ typedef __int64 int64_t;
 
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
@@ -148,24 +151,28 @@ private:
     /** Hide the copy constructor. */
     Query(const Query& q) : m_db(q.GetDatabase()) {}
     /** Hide the assignment operator. */
-    Query& operator=(const Query& ) { return *this; }
+    Query& operator=(const Query& )
+    {
+        return *this;
+    }
     /** Print current result to stdout. */
     void ViewRes();
+
     /** Print error to debug class. */
     void error(const std::string& );
-    Database& m_db; ///< Reference to database object
-    Database::OPENDB *odb; ///< Connection pool handle
-    sqlite3_stmt *res; ///< Stored result
-    bool row; ///< true if fetch_row succeeded
-    short rowcount; ///< Current column pointer in result
-    std::string m_tmpstr; ///< Used to store result in get_string() call
+    Database& m_db;         ///< Reference to database object
+    Database::OPENDB *odb;  ///< Connection pool handle
+    sqlite3_stmt *res;      ///< Stored result
+    bool row;               ///< true if fetch_row succeeded
+    short rowcount;         ///< Current column pointer in result
+    std::string m_tmpstr;   ///< Used to store result in get_string() call
     std::string m_last_query; ///< Last query executed
-    int cache_rc; ///< Cached result after call to get_result()
-    bool cache_rc_valid; ///< Indicates cache_rc is valid
-    int m_row_count; ///< 0 if get_result() returned no rows
+    int cache_rc;           ///< Cached result after call to get_result()
+    bool cache_rc_valid;    ///< Indicates cache_rc is valid
+    int m_row_count;        ///< 0 if get_result() returned no rows
     //
     std::map<std::string,int> m_nmap; ///< map translating column names to index
-    int m_num_cols; ///< number of columns in result
+    int m_num_cols;         ///< number of columns in result
 };
 
 

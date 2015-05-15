@@ -41,15 +41,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
 SysLog::SysLog(const std::string& appname,int option,int facility)
 {
-static    char blah[100];
-    strcpy(blah, appname.c_str());
-    openlog(blah, option, facility);
+    openlog(appname.c_str(), option, facility);
 }
 
 

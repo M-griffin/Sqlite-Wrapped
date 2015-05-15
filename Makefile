@@ -7,12 +7,12 @@ INSTALL_INCLUDE = $(INSTALL_PREFIX)/include
 INSTALL =	/usr/bin/install
 
 INCLUDE =	-I/usr/devel/include -I.
-CFLAGS =	-Wall -g -O2 $(INCLUDE) -MD
+CFLAGS =	-Wall -g -O2 -std=c++11 $(INCLUDE) -MD
 # namespace
 #CFLAGS +=	-DSQLITEW_NAMESPACE=sqlitew
 CPPFLAGS =	$(CFLAGS)
 
-LIBS =		-L/usr/devel/lib -L/usr/local/lib -lsqlitewrapped -lsqlite3
+LIBS =		-L/usr/lib -L/usr/local/lib -lsqlitewrapped -lsqlite3
 LIBNAME =	libsqlitewrapped
 
 PROGS =		
