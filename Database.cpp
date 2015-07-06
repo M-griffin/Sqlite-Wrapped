@@ -2,6 +2,16 @@
  **    Database.cpp
  **
  **    Published / author: 2005-08-12 / grymse@alhem.net
+ *
+ * ChangeLog:
+ * Michael Griffin Updated 2015-01-01 For Enthral BBS Functionality
+ * Updated Open, Perpare, Close to v2 functions.
+ *
+ *
+ * WIP add: sqlite3_create_collation_v2, sqlite3_create_module_v2
+ * look into functions like stored procedures.
+ * Need more testing to see what else can be expanded / improved.
+ *
  **/
 
 /*
@@ -29,6 +39,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#include <sqlite3.h>
+
 #include <stdio.h>
 #ifdef _WIN32
 #pragma warning(disable:4786)
@@ -39,7 +51,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sqlite3.h>
 #include <stdarg.h>
 
 #include "IError.h"
@@ -47,26 +58,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 #ifdef SQLITEW_NAMESPACE
-namespace SQLITEW_NAMESPACE {
+namespace SQLITEW_NAMESPACE
+{
 #endif
 
 
 Database::Database(const std::string& d,IError *e)
-:database(d)
-,m_errhandler(e)
-,m_embedded(true)
-,m_mutex(m_mutex)
-,m_b_use_mutex(false)
+    :database(d)
+    ,m_errhandler(e)
+    ,m_embedded(true)
+    ,m_mutex(m_mutex)
+    ,m_b_use_mutex(false)
 {
+
+    // printf(" ** Constructor Destructor\r\n");
+
 }
 
 
 Database::Database(Mutex& m,const std::string& d,IError *e)
-:database(d)
-,m_errhandler(e)
-,m_embedded(true)
-,m_mutex(m)
-,m_b_use_mutex(true)
+    :database(d)
+    ,m_errhandler(e)
+    ,m_embedded(true)
+    ,m_mutex(m)
+    ,m_b_use_mutex(true)
 {
 }
 
@@ -76,7 +91,10 @@ Database::~Database()
     for (opendb_v::iterator it = m_opendbs.begin(); it != m_opendbs.end(); it++)
     {
         OPENDB *p = *it;
-        sqlite3_close(p -> db);
+        /*
+         * Setup for new Verson2 Sqlite3.
+         */
+        sqlite3_close_v2(p -> db);
     }
     while (m_opendbs.size())
     {
@@ -101,7 +119,7 @@ void Database::RegErrHandler(IError *p)
 Database::OPENDB *Database::grabdb()
 {
     Lock lck(m_mutex, m_b_use_mutex);
-    OPENDB *odb = NULL;
+    OPENDB *odb = nullptr;
 
     for (opendb_v::iterator it = m_opendbs.begin(); it != m_opendbs.end(); it++)
     {
@@ -112,7 +130,7 @@ Database::OPENDB *Database::grabdb()
         }
         else
         {
-            odb = NULL;
+            odb = nullptr;
         }
     }
     if (!odb)
@@ -121,15 +139,23 @@ Database::OPENDB *Database::grabdb()
         if (!odb)
         {
             error("grabdb: OPENDB struct couldn't be created");
-            return NULL;
+            return nullptr;
         }
-        int rc = sqlite3_open(database.c_str(), &odb -> db);
+
+        /*
+         * Setup for new Verson2 Sqlite3.
+         */
+        //int rc = sqlite3_open(database.c_str(), &odb -> db);
+        int rc = sqlite3_open_v2(database.c_str(), &odb -> db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
         if (rc)
         {
             error("Can't open database: %s\n", sqlite3_errmsg(odb -> db));
-            sqlite3_close(odb -> db);
+            /*
+            * Setup for new Verson2 Sqlite3.
+            */
+            sqlite3_close_v2(odb -> db);
             delete odb;
-            return NULL;
+            return nullptr;
         }
         odb -> busy = true;
         m_opendbs.push_back(odb);
@@ -230,9 +256,9 @@ Database::Lock::~Lock()
 Database::Mutex::Mutex()
 {
 #ifdef _WIN32
-    m_mutex = ::CreateMutex(NULL, FALSE, NULL);
+    m_mutex = ::CreateMutex(nullptr, FALSE, nullptr);
 #else
-    pthread_mutex_init(&m_mutex, NULL);
+    pthread_mutex_init(&m_mutex, nullptr);
 #endif
 }
 
@@ -268,6 +294,10 @@ void Database::Mutex::Unlock()
 }
 
 
+/*
+ * Should not be used, use sqlite3_mprintf()
+ * To avoid Injection Attacks.
+ */
 std::string Database::safestr(const std::string& str)
 {
     std::string str2;
@@ -275,12 +305,19 @@ std::string Database::safestr(const std::string& str)
     {
         switch (str[i])
         {
-        case '\'':
-        case '\\':
-        case 34:
-            str2 += '\'';
-        default:
-            str2 += str[i];
+            case '\'': // Double Single Quotes
+                str2 += "\'\'";
+                break;
+
+            case '\\': // Double Back Slashes.
+                str2 += "\\\\";
+                break;
+
+            case '\0': // Skip nullptrs, not allowed!
+                break;
+
+            default:
+                str2 += str[i];
         }
     }
     return str2;
@@ -294,23 +331,23 @@ std::string Database::xmlsafestr(const std::string& str)
     {
         switch (str[i])
         {
-        case '&':
-            str2 += "&amp;";
-            break;
-        case '<':
-            str2 += "&lt;";
-            break;
-        case '>':
-            str2 += "&gt;";
-            break;
-        case '"':
-            str2 += "&quot;";
-            break;
-        case '\'':
-            str2 += "&apos;";
-            break;
-        default:
-            str2 += str[i];
+            case '&':
+                str2 += "&amp;";
+                break;
+            case '<':
+                str2 += "&lt;";
+                break;
+            case '>':
+                str2 += "&gt;";
+                break;
+            case '"':
+                str2 += "&quot;";
+                break;
+            case '\'':
+                str2 += "&apos;";
+                break;
+            default:
+                str2 += str[i];
         }
     }
     return str2;
@@ -349,4 +386,3 @@ uint64_t Database::a2ubigint(const std::string& str)
 #ifdef SQLITEW_NAMESPACE
 } // namespace SQLITEW_NAMESPACE {
 #endif
-
