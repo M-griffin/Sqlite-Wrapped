@@ -31,11 +31,24 @@ namespace SQLW
         , odb(dbin.addDatabasePool())
         , res(nullptr)
         , row(false)
+        , rowcount(0)
+        , m_tmpstr("")
+        , m_last_query("")
         , cache_rc(0)
         , cache_rc_valid(false)
         , m_row_count(0)
         , m_num_cols(0)
     {
+        /*
+        if(m_db.isConnected())
+            std::cout << "qry() is connected" << std::endl;
+        else
+            std::cout << "qry() is not connected" << std::endl;
+
+        if(odb)
+            std::cout << "odb is connected" << std::endl;
+        else
+            std::cout << "odb is not connected" << std::endl;*/
     }
 
     Query::Query(Database& dbin,const std::string& sql)
@@ -43,6 +56,9 @@ namespace SQLW
         , odb(dbin.addDatabasePool())
         , res(nullptr)
         , row(false)
+        , rowcount(0)
+        , m_tmpstr("")
+        , m_last_query("")
         , cache_rc(0)
         , cache_rc_valid(false)
         , m_row_count(0)
@@ -67,7 +83,6 @@ namespace SQLW
 
         if(odb)
         {
-            std::cout << "~free database" << std::endl;
             m_db.freeDatabasePool(odb);
         }
         else
@@ -90,12 +105,10 @@ namespace SQLW
 
     }
 
-
     Database& Query::getDatabase() const
     {
         return m_db;
     }
-
 
     /*
     The sqlite3_finalize() routine deallocates a prepared SQL statement.
@@ -112,11 +125,7 @@ namespace SQLW
         if(odb && !res)
         {
             const char *s = nullptr;
-
-            /*
-             * Setup for new Verson2 Sqlite3.
-             */
-            int rc = sqlite3_prepare_v2(odb -> db, sql.c_str(), sql.size(), &res, &s);
+            int rc = sqlite3_prepare_v2(odb->db, sql.c_str(), sql.size(), &res, &s);
             if(rc != SQLITE_OK)
             {
                 getDatabase().databaseError(*this, "execute: prepare query failed");
@@ -127,9 +136,11 @@ namespace SQLW
                 getDatabase().databaseError(*this, "execute: query failed");
                 return false;
             }
+
             rc = sqlite3_step(res); // execute
-            sqlite3_finalize(res); // deallocate statement
+            sqlite3_finalize(res);  // deallocate statement
             res = nullptr;
+
             switch(rc)
             {
                 case SQLITE_BUSY:
@@ -150,10 +161,7 @@ namespace SQLW
         return false;
     }
 
-
-
-// methods using db specific api calls
-
+    // methods using db specific api calls
     sqlite3_stmt *Query::getResult(const std::string& sql)
     {
         // query, result
@@ -165,9 +173,6 @@ namespace SQLW
         if(odb && !res)
         {
             const char *s = nullptr;
-            /*
-             * Setup for new Verson2 Sqlite3.
-             */
             int rc = sqlite3_prepare_v2(odb->db, sql.c_str(), sql.size(), &res, &s);
             if(rc != SQLITE_OK)
             {
@@ -182,12 +187,17 @@ namespace SQLW
             // get column names from result
             {
                 int i = 0;
+
+                // Don't require Free Result, do this automatically before running new queries!
+                std::map<std::string, int>().swap(m_nmap);
+
                 do
                 {
                     const char *p = sqlite3_column_name(res, i);
                     if(!p)
                         break;
-                    m_nmap[p] = ++i;
+                    //m_nmap[p] = ++i;
+                    m_nmap.insert(std::make_pair(p, ++i));
                 }
                 while(true);
                 m_num_cols = i;
@@ -198,7 +208,6 @@ namespace SQLW
         }
         return res;
     }
-
 
     void Query::freeResult()
     {
@@ -212,14 +221,8 @@ namespace SQLW
         row = false;
         cache_rc_valid = false;
 
-        // clear column names
-        while(m_nmap.size())
-        {
-            std::map<std::string,int>::iterator it = m_nmap.begin();
-            m_nmap.erase(it);
-        }
+        std::map<std::string,int>().swap(m_nmap);
     }
-
 
     bool Query::fetchRow()
     {
@@ -270,18 +273,15 @@ namespace SQLW
         }
     }
 
-
     long Query::getNumRows()
     {
         return odb && res ? m_row_count : 0;
     }
 
-
     int Query::getNumCols()
     {
         return m_num_cols;
     }
-
 
     bool Query::isNull(int x)
     {
@@ -295,7 +295,6 @@ namespace SQLW
         return false;
     }
 
-
     const char *Query::getstr(const std::string& x)
     {
         int index = m_nmap[x] - 1;
@@ -307,7 +306,6 @@ namespace SQLW
         return "";
     }
 
-
     const char *Query::getstr(int x)
     {
         if(odb && res && row && x < sqlite3_column_count(res))
@@ -318,12 +316,10 @@ namespace SQLW
         return "";
     }
 
-
     const char *Query::getstr()
     {
         return getstr(rowcount++);
     }
-
 
     double Query::getnum(const std::string& x)
     {
@@ -336,7 +332,6 @@ namespace SQLW
         return 0;
     }
 
-
     double Query::getnum(int x)
     {
         if(odb && res && row)
@@ -345,7 +340,6 @@ namespace SQLW
         }
         return 0;
     }
-
 
     long Query::getval(const std::string& x)
     {
@@ -358,7 +352,6 @@ namespace SQLW
         return 0;
     }
 
-
     long Query::getval(int x)
     {
         if(odb && res && row)
@@ -367,7 +360,6 @@ namespace SQLW
         }
         return 0;
     }
-
 
     double Query::getnum()
     {
@@ -473,9 +465,6 @@ namespace SQLW
         return l;
     }
 
-
-
-
     long Query::exeGetResultLong(const std::string& sql)
     {
         long l = 0;
@@ -489,7 +478,6 @@ namespace SQLW
         }
         return l;
     }
-
 
     const char *Query::exeGetCharString(const std::string& sql)
     {
@@ -519,7 +507,6 @@ namespace SQLW
         return "";
     }
 
-
     int Query::GetErrno()
     {
         if(odb)
@@ -529,35 +516,75 @@ namespace SQLW
         return 0;
     }
 
-
     bool Query::isConnected()
     {
         return odb ? true : false;
     }
 
-    // Testing or Console.
-    void Query::printResults()
-    {
-        if(!res)
-        {
-            printf("no result stored\n");
-            return;
-        }
-
-        printf("result column count = %d\n", sqlite3_column_count(res));
-        for(int i = 0; i < sqlite3_column_count(res); i++)
-        {
-            printf(" %2d   type %d   name '%s'", i, sqlite3_column_type(res, i), sqlite3_column_name(res, i));
-            printf("  / '%s'", (char *)sqlite3_column_text(res, i));
-            printf("  / %d", sqlite3_column_int(res, i));
-            printf("  / %f", sqlite3_column_double(res, i));
-            printf("\n");
-        }
-    }
-
     void Query::queryError(const std::string& msg)
     {
         getDatabase().databaseError(*this, msg);
+    }
+
+    /**
+     * Create a new Executate Transaction
+     */
+    bool Query::executeTransaction(const std::vector<std::string> &statements)
+    {
+        bool result = false;
+        char *errorMsg = 0;
+
+        if (!odb)
+        {
+            return result;
+        }
+
+        //Start a transaction with: sqlite3_exec(db, "BEGIN", 0, 0, 0);
+        int rc = sqlite3_exec(odb->db, "BEGIN;", 0, 0, 0);
+        if(rc != SQLITE_OK)
+        {
+            std::cout << "BEGIN Transaction Failed." << std::endl;
+            // queryError("BEGIN Transaction Failed. ");
+            return result;
+        }
+
+        for(std::string::size_type i = 0; i < statements.size(); i++)
+        {
+            // Execute Statement
+            rc = sqlite3_exec(odb->db, statements[i].c_str(), nullptr, 0, &errorMsg);
+
+            if(rc != SQLITE_OK)
+            {
+                std::cout << "Statement in Transaction Failed: " << errorMsg << std::endl;
+                sqlite3_free(errorMsg);
+
+                // rollback all update/insert to sqlite
+                rc = sqlite3_exec(odb->db, "ROLLBACK;", 0, 0, 0);
+                if(rc != SQLITE_OK)
+                {
+                    std::cout << "Unable to Rollback Transaction." << std::endl;
+                }
+                else
+                {
+                    std::cout << "Rollback Transaction Completed." << std::endl;
+                }
+                return result;
+            }
+        }
+
+        //Commit a transaction with: sqlite3_exec(db, "COMMIT", 0, 0, 0);
+        rc = sqlite3_exec(odb->db, "COMMIT;", 0, 0, 0);
+        if(rc != SQLITE_OK)
+        {
+            std::cout << "COMMIT Transaction Failed." << std::endl;
+            return result;
+        }
+        else
+        {
+            result = true;
+        }
+
+        return result;
     }
 
 } // namespace SQLW

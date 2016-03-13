@@ -18,10 +18,11 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
+#include <sstream>
 
 #include "IError.h"
 #include "Database.h"
@@ -32,7 +33,6 @@ namespace SQLW
     Database::Database(const std::string& database, IError *error)
         : m_database(database)
         , m_errhandler(error)
-        , m_embedded(true)
         , m_mutex(m_mutex)
         , m_is_mutex(false)
     {
@@ -43,7 +43,6 @@ namespace SQLW
     Database::Database(Mutex& m, const std::string& database, IError *error)
         : m_database(database)
         , m_errhandler(error)
-        , m_embedded(true)
         , m_mutex(m)
         , m_is_mutex(true)
     {
@@ -55,17 +54,11 @@ namespace SQLW
     {
         std::cout << "~Database" << std::endl;
 
-        // Loop and Close All Database Instances
-        for(m_database_pool::iterator it = m_opendbs.begin(); it != m_opendbs.end(); it++)
-        {
-            DatabasePool *p = *it;
-            sqlite3_close_v2(p->db);
-        }
-
         // Check Open Databases and pop off stack!
+        m_database_pool::iterator it;
         while(m_opendbs.size())
         {
-            m_database_pool::iterator it = m_opendbs.begin();
+            it = m_opendbs.begin();
             DatabasePool *p = *it;
             if(p->busy)
             {
@@ -88,10 +81,10 @@ namespace SQLW
         MutexLock lck(m_mutex, m_is_mutex);
         DatabasePool *odb = nullptr;
 
-        for(m_database_pool::iterator it = m_opendbs.begin(); it != m_opendbs.end(); it++)
+        for(m_database_pool::iterator it = m_opendbs.begin(); it != m_opendbs.end(); ++it)
         {
             odb = *it;
-            if(!odb -> busy)
+            if(!odb->busy)
             {
                 break;
             }
@@ -106,15 +99,17 @@ namespace SQLW
             odb = new DatabasePool;
             if(!odb)
             {
-                databaseError("grabdb: OPENDB struct couldn't be created");
+                databaseError("addDatabasePool: DatabasePool couldn't be created");
                 return nullptr;
             }
 
-            int rc = sqlite3_open_v2(m_database.c_str(), &odb -> db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+            // Look into shared chache more!
+            // int sqlite3_enable_shared_cache(int);
+            // SQLITE_OPEN_SHAREDCACHE.
+            int rc = sqlite3_open_v2(m_database.c_str(), &odb->db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
             if(rc)
             {
                 databaseError("Can't open database: %s\n", sqlite3_errmsg(odb -> db));
-                sqlite3_close_v2(odb -> db);
                 delete odb;
                 return nullptr;
             }
@@ -135,7 +130,7 @@ namespace SQLW
         MutexLock lck(m_mutex, m_is_mutex);
         if(odb)
         {
-            odb -> busy = false;
+            odb->busy = false;
         }
     }
 
@@ -153,7 +148,7 @@ namespace SQLW
             vsnprintf(errstr, 5000, format, ap);
 #endif
             va_end(ap);
-            m_errhandler -> databaseError(*this, errstr);
+            m_errhandler->databaseError(*this, errstr);
         }
     }
 
@@ -171,7 +166,7 @@ namespace SQLW
             vsnprintf(errstr, 5000, format, ap);
 #endif
             va_end(ap);
-            m_errhandler -> databaseError(*this, q, errstr);
+            m_errhandler->databaseError(*this, q, errstr);
         }
     }
 
@@ -180,7 +175,7 @@ namespace SQLW
     {
         if(m_errhandler)
         {
-            m_errhandler -> databaseError(*this, q, msg);
+            m_errhandler->databaseError(*this, q, msg);
         }
     }
 
@@ -317,33 +312,30 @@ namespace SQLW
         return str2;
     }
 
-
+    // Convert String to signed int64
     int64_t Database::a2bigint(const std::string& str)
     {
-        int64_t val = 0;
-        bool sign = false;
-        size_t i = 0;
-        if(str[i] == '-')
+        std::istringstream ss(str);
+        int64_t bitInt;
+        ss >> bitInt;
+        if (ss.fail())
         {
-            sign = true;
-            i++;
+            bitInt = 0;
         }
-        for(; i < str.size(); i++)
-        {
-            val = val * 10 + (str[i] - 48);
-        }
-        return sign ? -val : val;
+        return bitInt;
     }
 
-
+    // Convert String to Unsigned int64
     uint64_t Database::a2ubigint(const std::string& str)
     {
-        uint64_t val = 0;
-        for(size_t i = 0; i < str.size(); i++)
+        std::istringstream ss(str);
+        uint64_t bitInt;
+        ss >> bitInt;
+        if (ss.fail())
         {
-            val = val * 10 + (str[i] - 48);
+            bitInt = 0;
         }
-        return val;
+        return bitInt;
     }
 
 } // namespace SQLW {

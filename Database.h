@@ -75,7 +75,18 @@ namespace SQLW
         // Connection pool struct.
         struct DatabasePool
         {
-            DatabasePool() : busy(false) {}
+            DatabasePool()
+                : db(nullptr)
+                , busy(false)
+            { }
+            ~DatabasePool()
+            {
+                if (db)
+                {
+                    sqlite3_close_v2(db);
+                }
+            }
+
             sqlite3 *db;
             bool busy;
         };
@@ -134,19 +145,24 @@ namespace SQLW
 
     private:
 
-        Database(const Database&) : m_mutex(m_mutex) {}
+        /*
+        Database(const Database& db)
+            : m_mutex(m_mutex)
+        {
+            this = db;
+        }*/
 
+/*
         Database& operator=(const Database&)
         {
             return *this;
-        }
+        }*/
 
         void databaseError(const char *format, ...);
 
         std::string         m_database;
         m_database_pool     m_opendbs;
         IError             *m_errhandler;
-        bool                m_embedded;
         Mutex&              m_mutex;
         bool                m_is_mutex;
     };

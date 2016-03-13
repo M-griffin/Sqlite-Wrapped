@@ -18,8 +18,9 @@
 #include <string>
 #include <map>
 #include <vector>
-
+#include <memory>
 #include <stdint.h>
+#include <sstream>
 
 
 namespace SQLW
@@ -169,154 +170,225 @@ namespace SQLW
          */
 
         // Int
-        int getFieldValue(int type, int index)
+        void getFieldValue(int &type, int index)
         {
-            UNUSED(type);
-            int result = static_cast<int>(sqlite3_column_int(res, index));
-            return result;
+            //UNUSED(type);
+            type = static_cast<int>(sqlite3_column_int(res, index));
         }
 
         // Long or Time_T for Date/Time.
-        long getFieldValue(long type, int index)
+        void getFieldValue(long &type, int index)
         {
-            UNUSED(type);
-            long result = static_cast<long>(sqlite3_column_int64(res, index));
-            return result;
+            type = static_cast<long>(sqlite3_column_int64(res, index));
         }
 
         // Long Long
-        long long getFieldValue(long long type, int index)
+        void getFieldValue(long long &type, int index)
         {
-            UNUSED(type);
-            long long result = static_cast<long long>(sqlite3_column_int64(res, index));
-            return result;
+            type = static_cast<long long>(sqlite3_column_int64(res, index));
         }
 
         // Double
-        double getFieldValue(double type, int index)
+        void getFieldValue(double &type, int index)
         {
-            UNUSED(type);
-            double result = static_cast<double>(sqlite3_column_double(res, index));
-            return result;
+            type = static_cast<double>(sqlite3_column_double(res, index));
         }
 
         // Float
-        float getFieldValue(float type, int index)
+        void getFieldValue(float &type, int index)
         {
-            UNUSED(type);
-            float result = static_cast<float>(sqlite3_column_double(res, index));
-            return result;
+            type = static_cast<float>(sqlite3_column_double(res, index));
         }
 
         // Long Double
-        long double getFieldValue(long double type, int index)
+        void getFieldValue(long double &type, int index)
         {
-            UNUSED(type);
-            long double result = static_cast<long double>(sqlite3_column_double(res, index));
-            return result;
+            type = static_cast<long double>(sqlite3_column_double(res, index));
         }
 
         // Std::String
-        std::string getFieldValue(std::string type, int index)
+        void getFieldValue(std::string &type, int index)
         {
-            UNUSED(type);
-
-            std::string newString = "";
-            try
-            {
-                const char *text_result = reinterpret_cast<const char *>(sqlite3_column_text(res , index));
-                newString = text_result;
-                return newString;
-            }
-            catch (std::exception ex)
-            {
-                std::string message = "string getFieldValue: ";
-                message.append(ex.what());
-                queryError(message.c_str());
-            }
-            return newString;
+            const char *text_result = reinterpret_cast<const char *>(sqlite3_column_text(res , index));
+            type = text_result;
         }
 
         // Single Character
-        char getFieldValue(char type, int index)
+        void getFieldValue(char &type, int index)
         {
-            UNUSED(type);
             const char *result = reinterpret_cast<const char *>(sqlite3_column_text(res , index));
-            return result[0];
+            type = result[0];
         }
 
+        // Char *
+        const char *getFieldValue(char *, int index)
+        {
+            const char *result = reinterpret_cast<const char *>(sqlite3_column_text(res , index));
+            return result;
+        }
+
+        /*
         // Char *, or BLOB. sqlite3_column_blob ?  test this lateron!
         const char *getFieldValue(char *type, int index)
         {
-            UNUSED(type);
-            /*
             if (strcmp(type, "BLOB") == 0)
             {
                 // Test if we need to get len in bytes then cutoff!
                 const char *result = reinterpret_cast<const char *>(sqlite3_column_blob(res , index));
                 return result;
             }
-            else
-            {*/
             const char *result = reinterpret_cast<const char *>(sqlite3_column_text(res , index));
             return result;
-            //}
-            //return "\0";
-        }
+        }*/
 
         // Handle Boolean Values.
-        bool getFieldValue(bool type, int index)
+        void getFieldValue(bool &type, int index)
         {
-            UNUSED(type);
             int result = static_cast<int>(sqlite3_column_int(res , index));
-            return (result == 1) ? true : false;
+            if (result == 1)
+                type = true;
+            else
+                type = false;
         }
 
         /**
-        * @brief Template to Get Field Value by Column Name and Type.
+        * @brief Template to Get Field Value by Column Name and Populate Type passed.
         */
         template <typename TT, typename T>
-        T getFieldByName(TT tt, T t)
+        T getFieldByName(const TT &tt, T &t)
         {
             // Grab the index of the Matching Field Name
-            int index = m_nmap[tt] - 1;
+            std::map<std::string, int>::iterator it;
+            int index = 0;
 
-            T result;
-            switch(sqlite3_column_type(res, index))
+            if (m_nmap.empty())
             {
-                case SQLITE_NULL:
-                    return t;
-                    break;
-
-                default :
-                    // Template to pull field value dynamically from overloads.
-                    result = getFieldValue(t, index);
-                    break;
+                return t;
             }
+
+            it = m_nmap.find(tt);
+            if (it != m_nmap.end())
+            {
+                index = it->second;
+                --index;
+            }
+            else
+            {
+                return t;
+            }
+            if (index >= 0)
+            {
+                switch(sqlite3_column_type(res, index))
+                {
+                    case SQLITE_NULL:
+                        break;
+
+                    default :
+                        // Template to pull field value dynamically from overloads.
+                        getFieldValue(t, index);
+                        return t;
+                }
+            }
+            return t;
+        }
+
+
+        std::string getFieldType(float &)
+        {
+            std::string result("%f");
             return result;
         }
 
+        std::string getFieldType(double &)
+        {
+            std::string result("%d");
+            return result;
+        }
+
+        std::string getFieldType(long long &)
+        {
+            // %llu or lld ?!?
+            std::string result("%llu");
+            return result;
+        }
+
+        std::string getFieldType(char &)
+        {
+            std::string result("%Q");
+            return result;
+        }
+
+        std::string getFieldType(bool &)
+        {
+            std::string result("%d");
+            return result;
+        }
+
+        std::string getFieldType(char *)
+        {
+            std::string result("%Q");
+            return result;
+        }
+
+        std::string getFieldType(std::string &)
+        {
+            std::string result("%Q");
+            return result;
+        }
+
+        std::string getFieldType(long &)
+        {
+            std::string result("%ld");
+            return result;
+        }
+
+        std::string getFieldType(int &)
+        {
+            std::string result("%d");
+            return result;
+        }
+
+        /**
+         * @brief This takes a Description, and a Type, for translation inserts statements (Column) VALUES (TYPE)
+         */
+        template <typename TT, typename T>
+        std::pair<std::string, std::string> translateFieldName(const TT &tt, T &t)
+        {
+            std::pair<std::string, std::string> pair;
+
+            // Template to pull field type, int = %d, text = '%q' etc..
+            pair = std::make_pair(tt, getFieldType(t));
+            return pair;
+        }
+               
+        /**
+         * Create a new Executate Transaction
+         */
+        bool executeTransaction(const std::vector<std::string> &statements);
+
     private:
+
         /** Hide the copy constructor. */
+        /*
         Query(const Query& q)
             : m_db(q.getDatabase())
         {
             std::cout << "Query Constructor: q.getDatabase()" << std::endl;
-        }
+            *this = q;
+        }*/
 
         /** Hide the assignment operator. */
+        /*
         Query& operator=(const Query&)
         {
             std::cout << "Query Constructor: return *this" << std::endl;
             return *this;
-        }
-
-        /** Print current result to stdout. */
-        void printResults();
+        }*/
 
         /** Print error to debug class. */
         void queryError(const std::string&);
 
+        
 
         Database&                  m_db;           ///< Reference to database object
         Database::DatabasePool    *odb;            ///< Connection pool handle

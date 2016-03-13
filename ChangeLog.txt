@@ -1,6 +1,13 @@
 
+Change Log Update (00.00.02) 3/13/2016
+- Added new Templates for building fields to match up class variables.
+  translateFieldName() to build insert and update queries.
+- Added Transactions for multiple Creations, Inserts, and Updates.
+- Added a little more RAII for Query cleanup
+- Query is working good as a self destruction smart pointer.  
+- Database still has to be a normal object that is passed.
 
-Change Log Update (00.00.01)
+Change Log Update (00.00.01) 2/19/2016
 - Renamed Namespace from SQLITEW_NAMESPACE to SQLW.
   Also setup the default to use the namespace.
 - Reformatting all code to make it cleaner
