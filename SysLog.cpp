@@ -38,7 +38,7 @@ namespace SQLW
     void SysLog::databaseError(Database& db,Query& q,const std::string& str)
     {
         syslog(LOG_ERR, "%s: %s(%d)", str.c_str(),q.GetError().c_str(),q.GetErrno());
-        syslog(LOG_ERR, "QUERY: \"%s\"", q.GetLastQuery().c_str());
+        syslog(LOG_ERR, "QUERY: \"%s\"", q.getLastQuery().c_str());
     }
 
 } // namespace SQLW
