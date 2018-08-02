@@ -3,7 +3,7 @@
  *
  * Rewritten / author: 2016-02-19 / mrmisticismo@hotmail.com
  * Published / author: 2005-08-12 / grymse@alhem.net
- * Copyright (C) 2015-2016  Michael Griffin
+ * Copyright (C) 2015-2018  Michael Griffin
  * Copyright (C) 2001-2006  Anders Hedstrom
  * This program is made available under the terms of the GNU GPL.
  */
@@ -34,7 +34,7 @@ namespace SQLW
  *
  * Rewritten / author: 2016-02-19 / mrmisticismo@hotmail.com
  * Published / author: 2005-08-12 / grymse@alhem.net
- * Copyright (C) 2015-2016  Michael Griffin
+ * Copyright (C) 2015-2018  Michael Griffin
  * Copyright (C) 2001-2006  Anders Hedstrom
  * This program is made available under the terms of the GNU GPL.
  */
@@ -66,7 +66,7 @@ namespace SQLW
  *
  * Rewritten / author: 2016-02-19 / mrmisticismo@hotmail.com
  * Published / author: 2005-08-12 / grymse@alhem.net
- * Copyright (C) 2015-2016  Michael Griffin
+ * Copyright (C) 2015-2018  Michael Griffin
  * Copyright (C) 2001-2006  Anders Hedstrom
  * This program is made available under the terms of the GNU GPL.
  */
@@ -100,7 +100,7 @@ namespace SQLW
  *
  * Rewritten / author: 2016-02-19 / mrmisticismo@hotmail.com
  * Published / author: 2005-08-12 / grymse@alhem.net
- * Copyright (C) 2015-2016  Michael Griffin
+ * Copyright (C) 2015-2018  Michael Griffin
  * Copyright (C) 2001-2006  Anders Hedstrom
  * This program is made available under the terms of the GNU GPL.
  */
@@ -229,31 +229,18 @@ namespace SQLW
         void freeDatabasePool(DatabasePool *odb);
 
     	// Escape string - change all ' to ''.
-    	std::string safestr(const std::string& );
+    	std::string safeString(const std::string& );
 		
         // Make string xml safe.
-        std::string xmlsafestr(const std::string&);
+        std::string xmlSafeString(const std::string&);
 
         // Convert string to 64-bit integer.
-        int64_t a2bigint(const std::string&);
+        int64_t alphaToBigInt(const std::string&);
 
         // Convert string to unsigned 64-bit integer.
-        uint64_t a2ubigint(const std::string&);
+        uint64_t alphaToUnsignedBitInt(const std::string&);
 
     private:
-
-        /*
-        Database(const Database& db)
-            : m_mutex(m_mutex)
-        {
-            this = db;
-        }*/
-
-/*
-        Database& operator=(const Database&)
-        {
-            return *this;
-        }*/
 
         void databaseError(const char *format, ...);
 
@@ -275,7 +262,7 @@ namespace SQLW
  *
  * Rewritten / author: 2016-02-19 / mrmisticismo@hotmail.com
  * Published / author: 2005-08-12 / grymse@alhem.net
- * Copyright (C) 2015-2016  Michael Griffin
+ * Copyright (C) 2015-2018  Michael Griffin
  * Copyright (C) 2001-2006  Anders Hedstrom
  * This program is made available under the terms of the GNU GPL.
  */
@@ -342,10 +329,10 @@ namespace SQLW
         int getNumCols();
 
         /** Last error string. */
-        std::string GetError();
+        std::string getError();
 
         /** Last error code. */
-        int GetErrno();
+        int getErrorCode();
 
         /** Check if column x in current row is null. */
         bool isNull(int x);
@@ -368,79 +355,86 @@ namespace SQLW
          */
 
         /** Return column named x as a string value. */
-        const char *getstr(const std::string& x);
+        const char *getString(const std::string& x);
 
         /** Return column x as a string value. */
-        const char *getstr(int x);
+        const char *getString(int x);
 
         /** Return next column as a string value - see rowcount. */
-        const char *getstr();
+        const char *getString();
 
         /**
          * @brief On FetchRow, get the current column values as.
          */
 
         /** Return column named x as a long integer. */
-        long getval(const std::string& x);
+        long getValue(const std::string& x);
 
         /** Return column x as a long integer. */
-        long getval(int x);
+        long getValue(int x);
 
         /** Return next column as a long integer - see rowcount. */
-        long getval();
+        long getValue();
 
         /**
          * @brief On FetchRow, get the current column values as.
          */
 
         /** Return column named x as an unsigned long integer. */
-        unsigned long getuval(const std::string& x);
+        unsigned long getUnsignedValue(const std::string& x);
 
         /** Return column x as an unsigned long integer. */
-        unsigned long getuval(int x);
+        unsigned long getUnsignedValue(int x);
 
         /** Return next column as an unsigned long integer. */
-        unsigned long getuval();
+        unsigned long getUnsignedValue();
 
         /**
          * @brief On FetchRow, get the current column values as.
          */
 
         /** Return column named x as a 64-bit integer value. */
-        int64_t getbigint(const std::string& x);
+        int64_t getBigInt(const std::string& x);
 
         /** Return column x as a 64-bit integer value. */
-        int64_t getbigint(int x);
+        int64_t getBigInt(int x);
 
         /** Return next column as a 64-bit integer value. */
-        int64_t getbigint();
+        int64_t getBigInt();
 
         /** Return column named x as an unsigned 64-bit integer value. */
-        uint64_t getubigint(const std::string& x);
+        uint64_t getUnsignedBitInt(const std::string& x);
 
         /** Return column x as an unsigned 64-bit integer value. */
-        uint64_t getubigint(int x);
+        uint64_t getUnsignedBitInt(int x);
 
         /** Return next column as an unsigned 64-bit integer value. */
-        uint64_t getubigint();
+        uint64_t getUnsignedBitInt();
 
         /**
          * @brief On FetchRow, get the current column values as.
          */
 
         /** Return column named x as a double. */
-        double getnum(const std::string& x);
+        double getNumber(const std::string& x);
 
         /** Return column x as a double. */
-        double getnum(int x);
+        double getNumber(int x);
 
         /** Return next column as a double. */
-        double getnum();
+        double getNumber();
 
         /**
          * @brief On FetchRow, Get Field Value by Column Name and Type
          */
 
+        // Unsigned Int 32 bit
+        void getFieldValue(uint32_t &type, int index)
+        {
+            //UNUSED(type);
+            type = static_cast<uint32_t>(sqlite3_column_int(res, index));
+        }
+        
         // Int
         void getFieldValue(int &type, int index)
         {
@@ -615,6 +609,12 @@ namespace SQLW
         }
 
         std::string getFieldType(int &)
+        {
+            std::string result("%d");
+            return result;
+        }
+        
+        std::string getFieldType(uint32_t &)
         {
             std::string result("%d");
             return result;

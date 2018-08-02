@@ -1,4 +1,17 @@
 
+Change Log Update (00.00.04) 8/02/2018
+- Added slight additions from Oblivion/2 XRM copy.
+- Fixed casing and updates some method names to be more meaningful.
+- Added some new examples for some ORM work as used in Oblivion/2 XRM.
+  using examples of Users_Dao and Base_Dao Data Access Objects taking
+  advantage of new coded I've added to the API.
+- Also Rename SysLog.cpp/h to SysLogs.cpp/h because some linux distro's
+  already have existing files named this and was causing conflicts.
+
+Change Log Update (00.00.03) 8/01/2018
+- Accepted Pull Request for renaming incorrect casing of getLastQuery Call
+  in SysLog.cpp
+
 Change Log Update (00.00.02) 3/13/2016
 - Added new Templates for building fields to match up class variables.
   translateFieldName() to build insert and update queries.

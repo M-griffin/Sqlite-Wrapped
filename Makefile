@@ -12,21 +12,21 @@ CFLAGS =	-Wall -g -O2 -std=c++11 $(INCLUDE) -MD
 #CFLAGS +=	-DSQLITEW_NAMESPACE=sqlitew
 CPPFLAGS =	$(CFLAGS)
 
-LIBS =		-L/usr/lib -L/usr/local/lib -lsqlitewrapped -lsqlite3
-LIBNAME =	libsqlitewrapped
+LIBS =		-L/usr/lib -L/usr/local/lib -lSqliteWrapped -lsqlite3
+LIBNAME =	libSqliteWrapped
 
-PROGS =		
+
+PROGS =
 
 all:		$(PROGS) $(LIBNAME).a $(LIBNAME).h
 
-		
-LIBM =		Database.o Query.o StderrLog.o SysLog.o 
+LIBM =		Database.o Query.o StderrLog.o SysLogs.o
 $(LIBNAME).a: 	$(LIBM)
-		ar cru $(LIBNAME).a $(LIBM)
+		ar cr $(LIBNAME).a $(LIBM)
 		ranlib $(LIBNAME).a
 
-$(LIBNAME).h:	IError.h StderrLog.h SysLog.h Database.h Query.h 
-		cat IError.h StderrLog.h SysLog.h Database.h Query.h > $(LIBNAME).h
+$(LIBNAME).h:	IError.h StderrLog.h SysLogs.h Database.h Query.h
+		cat IError.h StderrLog.h SysLogs.h Database.h Query.h > $(LIBNAME).h
 
 install:	all
 		@mkdir -p $(INSTALL_LIB)
@@ -49,7 +49,7 @@ tar:		clean
 			Database.* \
 			IError.h \
 			StderrLog.* \
-			SysLog.* \
+			SysLogs.* \
 			sqlite3test.cpp \
 			Makefile gpl.txt \
 			Project/*.dsp Project/*.dsw
