@@ -1,4 +1,7 @@
 
+Change Log Update (00.00.05) 8/05/2018
+- Add missed string parameter usage in SysLogs.cpp
+
 Change Log Update (00.00.04) 8/02/2018
 - Added slight additions from Oblivion/2 XRM copy.
 - Fixed casing and updates some method names to be more meaningful.
